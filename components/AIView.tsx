@@ -2,7 +2,7 @@
 // components/AIView.tsx — Neyro Tarmoq tahlil ko'rinishi (kunlik/haftalik/oylik)
 
 import { useState, useEffect } from 'react'
-import { BrainCircuit, ChevronRight, CheckCircle, CalendarDays, Calendar, BarChart3 } from 'lucide-react'
+import { BrainCircuit, ChevronRight, CheckCircle, CalendarDays, Calendar, BarChart3, type LucideIcon } from 'lucide-react'
 import { format, startOfWeek, endOfWeek } from 'date-fns'
 import { useWeeklyStats, useMonthlyStats } from '@/lib/hooks/useStats'
 import { useTasks } from '@/lib/hooks/useTasks'
@@ -13,7 +13,7 @@ import type { AIQuestion, AISession } from '@/lib/types'
 type Phase = 'intro' | 'questions' | 'answers' | 'advice'
 type AnalysisType = 'daily' | 'weekly' | 'monthly'
 
-const ANALYSIS_TABS: { id: AnalysisType; label: string; Icon: React.ComponentType<{ size?: number; color?: string }> }[] = [
+const ANALYSIS_TABS: { id: AnalysisType; label: string; Icon: LucideIcon }[] = [
   { id: 'daily',   label: 'Kunlik',   Icon: CalendarDays },
   { id: 'weekly',  label: 'Haftalik', Icon: Calendar },
   { id: 'monthly', label: 'Oylik',    Icon: BarChart3 },
