@@ -1,8 +1,14 @@
 'use client'
-// app/providers.tsx — TanStack Query provider
+// app/providers.tsx — TanStack Query + Theme provider
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
+import { ThemeContext, useThemeState } from '@/lib/hooks/useTheme'
+
+function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const value = useThemeState()
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -19,7 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <ThemeProvider>{children}</ThemeProvider>
     </QueryClientProvider>
   )
 }

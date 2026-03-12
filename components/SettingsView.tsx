@@ -1,21 +1,56 @@
 'use client'
 // components/SettingsView.tsx — sozlamalar ko'rinishi
 
-import { useState } from 'react'
-import { LogOut, Trash2, Plus, Bell } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import {
+  LogOut, Trash2, Plus, Bell,
+  User, Briefcase, BookOpen, Heart, Star, Zap,
+  Target, Music, Coffee, Home, Globe, Dumbbell,
+  Camera, Code, ShoppingCart, Plane,
+  Sun, Moon, Monitor,
+} from 'lucide-react'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { useCategories, useDeleteCategory } from '@/lib/hooks/useCategories'
 import { CategoryModal } from './CategoryModal'
 import { createClient } from '@/lib/supabase/client'
+import { useTheme } from '@/lib/hooks/useTheme'
+import type { ReactNode } from 'react'
+
+const ICON_MAP: Record<string, ReactNode> = {
+  'user':          <User size={16} />,
+  'briefcase':     <Briefcase size={16} />,
+  'book':          <BookOpen size={16} />,
+  'heart':         <Heart size={16} />,
+  'star':          <Star size={16} />,
+  'zap':           <Zap size={16} />,
+  'target':        <Target size={16} />,
+  'music':         <Music size={16} />,
+  'coffee':        <Coffee size={16} />,
+  'home':          <Home size={16} />,
+  'globe':         <Globe size={16} />,
+  'dumbbell':      <Dumbbell size={16} />,
+  'camera':        <Camera size={16} />,
+  'code':          <Code size={16} />,
+  'shopping-cart': <ShoppingCart size={16} />,
+  'plane':         <Plane size={16} />,
+}
 
 export function SettingsView() {
   const { user, profile, signOut } = useAuth()
   const { categories } = useCategories()
   const deleteCategory = useDeleteCategory()
+  const { theme, setTheme } = useTheme()
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [reminderTime, setReminderTime] = useState(profile?.reminder_time ?? '22:00')
   const [reminderEnabled, setReminderEnabled] = useState(true)
   const [deleteError, setDeleteError] = useState('')
+
+  // Profile yuklangandan keyin reminderTime ni sinxronlashtirish
+  useEffect(() => {
+    if (profile?.reminder_time) {
+      setReminderTime(profile.reminder_time)
+    }
+  }, [profile?.reminder_time])
 
   async function saveReminderTime(time: string) {
     setReminderTime(time)
@@ -48,7 +83,7 @@ export function SettingsView() {
     <div style={{ padding: '16px 16px 100px' }}>
       <h1
         style={{
-          fontFamily: 'Instrument Serif, serif',
+          fontFamily: 'Inter, sans-serif',
           fontSize: '1.6rem',
           marginBottom: 20,
         }}
@@ -95,6 +130,44 @@ export function SettingsView() {
               {user?.email}
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Mavzu */}
+      <section style={sectionStyle}>
+        <h2 style={sectionTitleStyle}>Ko&apos;rinish</h2>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {([
+            { value: 'light', label: 'Kunduz', icon: <Sun size={16} /> },
+            { value: 'dark',  label: 'Tun',    icon: <Moon size={16} /> },
+            { value: 'system',label: 'Avto',   icon: <Monitor size={16} /> },
+          ] as const).map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setTheme(opt.value)}
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
+                padding: '10px 8px',
+                borderRadius: 'var(--radius-sm)',
+                border: theme === opt.value
+                  ? '2px solid var(--accent)'
+                  : '2px solid var(--border)',
+                background: theme === opt.value ? 'var(--accent-light)' : 'var(--surface2)',
+                color: theme === opt.value ? 'var(--accent)' : 'var(--text2)',
+                cursor: 'pointer',
+                fontSize: '0.8rem',
+                fontWeight: theme === opt.value ? 600 : 400,
+                transition: 'all 0.15s',
+              }}
+            >
+              {opt.icon}
+              {opt.label}
+            </button>
+          ))}
         </div>
       </section>
 
@@ -223,11 +296,9 @@ export function SettingsView() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: cat.color,
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
                   }}
                 >
-                  {cat.emoji?.[0]?.toUpperCase() ?? '●'}
+                  {ICON_MAP[cat.emoji] ?? <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>●</span>}
                 </div>
                 <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text)' }}>
                   {cat.name}

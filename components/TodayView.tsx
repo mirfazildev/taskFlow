@@ -71,7 +71,7 @@ export function TodayView() {
   const { categories } = useCategories()
   const stats = useDailyStats(selectedDate)
   const reorderTasks = useReorderTasks()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   // Takrorlanuvchi vazifalar instancelarini avtomatik yaratish
   useEnsureRecurringInstances(selectedDate, user?.id)
 
@@ -85,7 +85,7 @@ export function TodayView() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
-  // 22:00 eslatmasi
+  // Foydalanuvchi eslatma vaqtida bildirishnoma
   useEffect(() => {
     if (typeof window === 'undefined' || !isToday) return
 
@@ -93,18 +93,25 @@ export function TodayView() {
       Notification.requestPermission()
     }
 
+    const reminderTime = profile?.reminder_time ?? '22:00'
+    const [reminderHour, reminderMinute] = reminderTime.split(':').map(Number)
+
     const checkTime = setInterval(() => {
       const now = new Date()
-      if (now.getHours() === 22 && now.getMinutes() === 0 && Notification.permission === 'granted') {
+      if (
+        now.getHours() === reminderHour &&
+        now.getMinutes() === reminderMinute &&
+        Notification.permission === 'granted'
+      ) {
         new Notification('TaskFlow', {
-          body: "Ertangi kun uchun vazifalaringizni rejalashtiring! 📋",
+          body: "Ertangi kun uchun vazifalaringizni rejalashtiring!",
           icon: '/icon-192.png',
         })
       }
     }, 60_000)
 
     return () => clearInterval(checkTime)
-  }, [isToday])
+  }, [isToday, profile?.reminder_time])
 
   function prevDay() {
     setSelectedDate(format(subDays(new Date(selectedDate), 1), 'yyyy-MM-dd'))
@@ -136,7 +143,9 @@ export function TodayView() {
   const pendingTasks = filteredTasks.filter(t => t.status !== 'completed')
   const doneTasks = filteredTasks.filter(t => t.status === 'completed')
 
-  const completionRate = stats?.completion_rate ?? 0
+  const totalCount = tasks.length
+  const completedCount = tasks.filter(t => t.status === 'completed').length
+  const completionRate = totalCount > 0 ? (completedCount / totalCount) * 100 : 0
 
   return (
     <div style={{ paddingBottom: 90 }}>
@@ -154,7 +163,7 @@ export function TodayView() {
           <div style={{ textAlign: 'center' }}>
             <h1
               style={{
-                fontFamily: 'Instrument Serif, serif',
+                fontFamily: 'Inter, sans-serif',
                 fontSize: '1.6rem',
                 color: 'var(--text)',
                 lineHeight: 1.1,
@@ -229,7 +238,7 @@ export function TodayView() {
         <ProgressRing rate={completionRate} />
         <div style={{ flex: 1 }}>
           <p style={{ fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
-            {stats ? `${stats.completed_tasks}/${stats.total_tasks} bajarildi` : "Vazifalar yo'q"}
+            {totalCount > 0 ? `${completedCount}/${totalCount} bajarildi` : "Vazifalar yo'q"}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {categories.slice(0, 4).map(cat => {

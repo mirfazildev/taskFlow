@@ -18,7 +18,7 @@ export function useCategories() {
   // Realtime: kategoriyalar o'zgarganda avtomatik refetch
   useEffect(() => {
     const channel = supabase
-      .channel('categories')
+      .channel(`categories:${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'categories' },

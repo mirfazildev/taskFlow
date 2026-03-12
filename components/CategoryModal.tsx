@@ -91,7 +91,7 @@ export function CategoryModal({ onClose }: CategoryModalProps) {
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <h2 style={{ fontFamily: 'Instrument Serif, serif', fontSize: '1.25rem' }}>
+          <h2 style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.25rem' }}>
             Yangi kategoriya
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text2)' }}>

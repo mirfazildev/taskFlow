@@ -44,6 +44,7 @@ export function useTasks(date: string) {
         .from('tasks')
         .select('*, categories(*)')
         .eq('date', date)
+        .or('is_template.is.null,is_template.eq.false')
         .order('sort_order')
         .order('start_time')
 

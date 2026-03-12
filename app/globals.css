@@ -1,29 +1,93 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ===== LIGHT MODE ===== */
 :root {
-  --bg: #FAFAFA;
+  --bg: #F7F8FC;
   --surface: #FFFFFF;
-  --surface2: #F5F5F7;
-  --border: #E8E8EC;
-  --border2: #D0D0D8;
+  --surface2: #F0F2F8;
+  --surface3: #E8EBF5;
+  --border: #E2E5F0;
+  --border2: #C8CCDC;
   --text: #1A1A2E;
-  --text2: #6B6B80;
-  --text3: #9898B0;
-  --accent: #4F7FFF;
-  --accent-light: #EEF3FF;
+  --text2: #5A5A78;
+  --text3: #9090B0;
+  --accent: #5B7FFF;
+  --accent-light: #EBF0FF;
+  --accent-dark: #3D62E0;
   --success: #16A34A;
   --success-light: #F0FDF4;
   --warning: #D97706;
+  --warning-light: #FFFBEB;
   --danger: #DC2626;
   --danger-light: #FEF2F2;
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --radius: 14px;
+  --radius-sm: 9px;
+  --radius-xs: 6px;
+  --shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.09);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --nav-bg: rgba(255, 255, 255, 0.94);
+  --nav-border: rgba(226, 229, 240, 0.8);
+}
+
+/* ===== DARK MODE (manual toggle) ===== */
+[data-theme="dark"] {
+  --bg: #0E0E1A;
+  --surface: #16162A;
+  --surface2: #1E1E35;
+  --surface3: #262640;
+  --border: #2A2A45;
+  --border2: #3A3A58;
+  --text: #EEEEFF;
+  --text2: #9090B8;
+  --text3: #5A5A80;
+  --accent: #7090FF;
+  --accent-light: #1A2050;
+  --accent-dark: #5070E0;
+  --success: #22C55E;
+  --success-light: #0C2018;
+  --warning: #F59E0B;
+  --warning-light: #1E1500;
+  --danger: #F87171;
+  --danger-light: #2A0E0E;
+  --shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --nav-bg: rgba(20, 20, 38, 0.95);
+  --nav-border: rgba(42, 42, 69, 0.8);
+}
+
+/* ===== DARK MODE (system fallback — before JS loads) ===== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E0E1A;
+    --surface: #16162A;
+    --surface2: #1E1E35;
+    --surface3: #262640;
+    --border: #2A2A45;
+    --border2: #3A3A58;
+    --text: #EEEEFF;
+    --text2: #9090B8;
+    --text3: #5A5A80;
+    --accent: #7090FF;
+    --accent-light: #1A2050;
+    --accent-dark: #5070E0;
+    --success: #22C55E;
+    --success-light: #0C2018;
+    --warning: #F59E0B;
+    --warning-light: #1E1500;
+    --danger: #F87171;
+    --danger-light: #2A0E0E;
+    --shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --nav-bg: rgba(20, 20, 38, 0.95);
+    --nav-border: rgba(42, 42, 69, 0.8);
+  }
 }
 
 * {
@@ -35,24 +99,24 @@
 html, body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Stagger animatsiya classlari */
+/* ===== ANIMATIONS ===== */
 .stagger-1 { animation-delay: 0.05s; }
 .stagger-2 { animation-delay: 0.10s; }
 .stagger-3 { animation-delay: 0.15s; }
 .stagger-4 { animation-delay: 0.20s; }
 .stagger-5 { animation-delay: 0.25s; }
 
-/* Skeleton loading uchun shimmer effekti */
+/* Skeleton shimmer effekti */
 .skeleton {
   background: linear-gradient(
     90deg,
     var(--surface2) 25%,
-    var(--border) 50%,
+    var(--surface3) 50%,
     var(--surface2) 75%
   );
   background-size: 400px 100%;
@@ -60,7 +124,7 @@ html, body {
   border-radius: var(--radius-sm);
 }
 
-/* Scrollbar yashirish (mobil ko'rinish uchun) */
+/* Scrollbar yashirish */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -69,28 +133,7 @@ html, body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-/* Geist font (CDN orqali yuklanadi agar o'rnatilmagan bo'lsa) */
-@font-face {
-  font-family: 'Geist';
-  src: url('https://cdn.jsdelivr.net/npm/geist/dist/fonts/geist-sans/Geist-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Geist';
-  src: url('https://cdn.jsdelivr.net/npm/geist/dist/fonts/geist-sans/Geist-Medium.woff2') format('woff2');
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Geist';
-  src: url('https://cdn.jsdelivr.net/npm/geist/dist/fonts/geist-sans/Geist-SemiBold.woff2') format('woff2');
-  font-weight: 600;
-  font-display: swap;
-}
-
+/* ===== FONTS ===== */
 @font-face {
   font-family: 'Geist Mono';
   src: url('https://cdn.jsdelivr.net/npm/geist/dist/fonts/geist-mono/GeistMono-Regular.woff2') format('woff2');

@@ -21,9 +21,9 @@ export function useDailyStats(date: string) {
         .from('daily_stats')
         .select('*')
         .eq('date', date)
-        .single()
+        .maybeSingle()
       if (error) return null
-      return data as DailyStats
+      return data as DailyStats | null
     },
   })
 
@@ -48,7 +48,7 @@ export function useWeeklyStats(date: string) {
       return weekDays.map(d => {
         const found = (data ?? []).find(s => s.date === d)
         return found ?? {
-          id: d, user_id: '', date: d,
+          id: `placeholder-${d}`, user_id: '', date: d,
           total_tasks: 0, completed_tasks: 0,
           completion_rate: 0, by_category: {},
         } as DailyStats
@@ -77,7 +77,7 @@ export function useMonthlyStats() {
       return last30.map(d => {
         const found = (data ?? []).find(s => s.date === d)
         return found ?? {
-          id: d, user_id: '', date: d,
+          id: `placeholder-${d}`, user_id: '', date: d,
           total_tasks: 0, completed_tasks: 0,
           completion_rate: 0, by_category: {},
         } as DailyStats

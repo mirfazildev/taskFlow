@@ -22,6 +22,9 @@ const taskSchema = z.object({
   start_time: z.string().min(1, 'Boshlanish vaqti kiritilishi shart'),
   end_time: z.string().min(1, 'Tugash vaqti kiritilishi shart'),
   priority: z.number().min(1).max(5),
+}).refine(data => !data.start_time || !data.end_time || data.end_time > data.start_time, {
+  message: "Tugash vaqti boshlanish vaqtidan keyin bo'lishi kerak",
+  path: ['end_time'],
 })
 
 type TaskFormData = z.infer<typeof taskSchema>
@@ -62,6 +65,7 @@ export function TaskModal({ task, defaultDate, onClose }: TaskModalProps) {
   const [recurrenceEndDate, setRecurrenceEndDate] = useState(task?.recurrence_end_date ?? '')
   const [showRecurrence, setShowRecurrence] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   // Bir kunda bir necha vaqt
   const [useMultipleSlots, setUseMultipleSlots] = useState(false)
@@ -69,7 +73,7 @@ export function TaskModal({ task, defaultDate, onClose }: TaskModalProps) {
     { start_time: '09:00', end_time: '09:30', label: '' },
   ])
 
-  const { register, handleSubmit, formState: { errors } } = useForm<TaskFormData>({
+  const { register, handleSubmit, getValues, formState: { errors } } = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
       title: task?.title ?? '',
@@ -102,6 +106,7 @@ export function TaskModal({ task, defaultDate, onClose }: TaskModalProps) {
 
   async function onSubmit(data: TaskFormData) {
     setIsSubmitting(true)
+    setSubmitError('')
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -124,18 +129,31 @@ export function TaskModal({ task, defaultDate, onClose }: TaskModalProps) {
         await updateTask.mutateAsync({ id: task.id, updates: baseTask, date: task.date })
       } else if (recurrenceType !== 'none' && showRecurrence) {
         const slots = useMultipleSlots && timeSlots.length > 1
-          ? timeSlots.map(s => ({ start_time: s.start_time, end_time: s.end_time, label: s.label || undefined }))
-          : null
+          ? timeSlots.map(s => ({ start_time: s.start_time, end_time: s.end_time, ...(s.label ? { label: s.label } : {}) }))
+          : undefined
 
-        await addRecurring({
+        const recurringPayload: Record<string, unknown> = {
           ...baseTask,
           is_template: true,
           recurrence_type: recurrenceType,
-          recurrence_days: recurrenceType === 'weekly' ? recurrenceDays : undefined,
-          recurrence_end_date: recurrenceEndDate || undefined,
           template_id: null,
-          time_slots: slots,
-        })
+        }
+        if (recurrenceType === 'weekly') recurringPayload.recurrence_days = recurrenceDays
+        if (recurrenceEndDate) recurringPayload.recurrence_end_date = recurrenceEndDate
+        // time_slots — DB da ustun bo'lsa qo'shiladi, bo'lmasa o'tkazib yuboriladi
+        try {
+          if (slots) recurringPayload.time_slots = slots
+          await addRecurring(recurringPayload as Parameters<typeof addRecurring>[0])
+        } catch (e) {
+          const msg = (e as { message?: string })?.message ?? ''
+          if (msg.includes('time_slots')) {
+            // time_slots ustuni yo'q — usiz qayta urinish
+            delete recurringPayload.time_slots
+            await addRecurring(recurringPayload as Parameters<typeof addRecurring>[0])
+          } else {
+            throw e
+          }
+        }
       } else {
         await addTask.mutateAsync({
           ...baseTask,
@@ -145,6 +163,9 @@ export function TaskModal({ task, defaultDate, onClose }: TaskModalProps) {
         })
       }
       onClose()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : (err as { message?: string })?.message ?? 'Xatolik yuz berdi'
+      setSubmitError(msg)
     } finally {
       setIsSubmitting(false)
     }
@@ -171,7 +192,7 @@ export function TaskModal({ task, defaultDate, onClose }: TaskModalProps) {
         >
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <h2 style={{ fontFamily: 'Instrument Serif, serif', fontSize: '1.25rem' }}>
+            <h2 style={{ fontFamily: 'Inter, sans-serif', fontSize: '1.25rem' }}>
               {task ? 'Vazifani tahrirlash' : 'Yangi vazifa'}
             </h2>
             <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text2)' }}>
@@ -273,7 +294,17 @@ export function TaskModal({ task, defaultDate, onClose }: TaskModalProps) {
 
             {/* Toggle: bir nechta vaqt */}
             <button type="button"
-              onClick={() => setUseMultipleSlots(prev => !prev)}
+              onClick={() => {
+                if (!useMultipleSlots) {
+                  // Formadagi vaqtlarni birinchi slotga ko'chirish
+                  const { start_time, end_time } = getValues()
+                  setTimeSlots(prev => [
+                    { ...prev[0], start_time, end_time },
+                    ...prev.slice(1),
+                  ])
+                }
+                setUseMultipleSlots(prev => !prev)
+              }}
               style={{
                 display: 'flex', alignItems: 'center', gap: 8,
                 padding: '8px 12px', borderRadius: 'var(--radius-sm)',
@@ -415,6 +446,17 @@ export function TaskModal({ task, defaultDate, onClose }: TaskModalProps) {
                     )}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Xato xabari */}
+            {submitError && (
+              <div style={{
+                padding: '10px 12px', borderRadius: 'var(--radius-sm)',
+                background: 'var(--danger-light)', border: '1px solid var(--danger)',
+                color: 'var(--danger)', fontSize: '0.82rem', lineHeight: 1.5,
+              }}>
+                {submitError}
               </div>
             )}
 

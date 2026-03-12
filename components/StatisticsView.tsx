@@ -35,7 +35,7 @@ export function StatisticsView() {
     <div style={{ padding: '16px 16px 100px' }}>
       <h1
         style={{
-          fontFamily: 'Instrument Serif, serif',
+          fontFamily: 'Inter, sans-serif',
           fontSize: '1.6rem',
           marginBottom: 16,
         }}
@@ -325,7 +325,7 @@ export function StatisticsView() {
                 <p style={{ fontWeight: 600, marginBottom: 12, fontSize: '0.9rem' }}>30 kunlik faollik</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: 4 }}>
                   {monthData.map((day, i) => {
-                    const rate = day.completion_rate
+                    const rate = day.completion_rate ?? 0
                     const opacity = day.total_tasks === 0 ? 0.08 : Math.max(0.15, rate / 100)
                     return (
                       <div

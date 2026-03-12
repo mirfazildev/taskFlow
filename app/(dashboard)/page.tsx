@@ -8,6 +8,7 @@ import { TodayView } from '@/components/TodayView'
 import { StatisticsView } from '@/components/StatisticsView'
 import { AIView } from '@/components/AIView'
 import { SettingsView } from '@/components/SettingsView'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 
 export default function DashboardPage() {
   const { activeTab } = useUIStore()
@@ -23,8 +24,8 @@ export default function DashboardPage() {
       }}
     >
       {activeTab === 'today'      && <TodayView />}
-      {activeTab === 'statistics' && <StatisticsView />}
-      {activeTab === 'ai'         && <AIView />}
+      {activeTab === 'statistics' && <ErrorBoundary><StatisticsView /></ErrorBoundary>}
+      {activeTab === 'ai'         && <ErrorBoundary><AIView /></ErrorBoundary>}
       {activeTab === 'settings'   && <SettingsView />}
 
       <BottomNav />

@@ -75,7 +75,7 @@ export default function LoginPage() {
           </div>
           <h1
             style={{
-              fontFamily: 'Instrument Serif, serif',
+              fontFamily: 'Inter, sans-serif',
               fontSize: '2.5rem',
               color: 'var(--text)',
               lineHeight: 1.1,

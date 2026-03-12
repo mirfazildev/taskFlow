@@ -5,6 +5,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import type { Task, RecurrenceType } from '@/lib/types'
 
+// Race condition oldini olish uchun: bir vaqtda bir nechta komponent chaqirishidan himoya
+const ensureInFlight = new Set<string>()
+
 /** Berilgan sana uchun takrorlanuvchi vazifa instance yaratish kerakmi? */
 export function shouldRecurOnDate(template: Task, date: string): boolean {
   const d = new Date(date)
@@ -47,6 +50,12 @@ export function useEnsureRecurringInstances(date: string, userId: string | undef
     queryFn: async () => {
       if (!userId) return []
 
+      // Race condition himoyasi: bir xil kun uchun parallel insert oldini olish
+      const lockKey = `${userId}:${date}`
+      if (ensureInFlight.has(lockKey)) return []
+      ensureInFlight.add(lockKey)
+
+      try {
       // Barcha template vazifalarni olish
       const { data: templates } = await supabase
         .from('tasks')
@@ -107,6 +116,9 @@ export function useEnsureRecurringInstances(date: string, userId: string | undef
       }
 
       return toCreate
+      } finally {
+        ensureInFlight.delete(lockKey)
+      }
     },
   })
 }

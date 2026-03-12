@@ -2,7 +2,7 @@
 // components/TaskCard.tsx — bitta vazifa kartasi
 
 import { useState } from 'react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { PenLine, Trash2, Clock } from 'lucide-react'
 import { useToggleTask, useDeleteTask } from '@/lib/hooks/useTasks'
 import { PRIORITY_COLORS, formatTime } from '@/lib/utils'
 import type { Task, Category } from '@/lib/types'
@@ -18,8 +18,13 @@ export function TaskCard({ task, category, onEdit, animClass = 'animate-fade-up'
   const toggleTask = useToggleTask()
   const deleteTask = useDeleteTask()
   const [showActions, setShowActions] = useState(false)
+  // Mobil qurilmalarda (touch) tugmalar har doim ko'rinib turishi
+  const [isTouchDevice] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
+  )
 
   const isDone = task.status === 'completed'
+  const isSkipped = task.status === 'skipped'
   const priorityColor = PRIORITY_COLORS[task.priority]
 
   async function handleToggle() {
@@ -39,24 +44,26 @@ export function TaskCard({ task, category, onEdit, animClass = 'animate-fade-up'
       onMouseLeave={() => setShowActions(false)}
       style={{
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         gap: 12,
-        padding: '12px 14px',
+        padding: '13px 14px',
         background: 'var(--surface)',
         border: '1px solid var(--border)',
-        borderLeft: `3px solid ${priorityColor}`,
+        borderLeft: `3px solid ${isDone || isSkipped ? 'var(--border2)' : priorityColor}`,
         borderRadius: 'var(--radius)',
         cursor: 'pointer',
         transition: 'transform 0.15s, box-shadow 0.15s',
-        opacity: isDone ? 0.6 : 1,
+        opacity: isDone || isSkipped ? 0.55 : 1,
         position: 'relative',
       }}
       onMouseOver={e => {
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-1px)'
+        if (isTouchDevice) return
+        ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(-1px)'
         ;(e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-md)'
       }}
       onMouseOut={e => {
-        (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'
+        if (isTouchDevice) return
+        ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'
         ;(e.currentTarget as HTMLDivElement).style.boxShadow = 'none'
       }}
     >
@@ -65,8 +72,8 @@ export function TaskCard({ task, category, onEdit, animClass = 'animate-fade-up'
         onClick={handleToggle}
         disabled={toggleTask.isPending}
         style={{
-          width: 24,
-          height: 24,
+          width: 22,
+          height: 22,
           borderRadius: '50%',
           border: `2px solid ${isDone ? '#16A34A' : 'var(--border2)'}`,
           background: isDone ? '#16A34A' : 'transparent',
@@ -75,20 +82,17 @@ export function TaskCard({ task, category, onEdit, animClass = 'animate-fade-up'
           justifyContent: 'center',
           cursor: 'pointer',
           flexShrink: 0,
+          marginTop: 1,
           transition: 'all 0.2s',
         }}
+        aria-label={isDone ? "Bajarilmagan deb belgilash" : "Bajarilgan deb belgilash"}
       >
         {isDone && (
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 12 12"
-            className="animate-scale-in"
-          >
+          <svg width="11" height="11" viewBox="0 0 12 12" className="animate-scale-in">
             <path
               d="M2 6l3 3 5-5"
               stroke="white"
-              strokeWidth="2"
+              strokeWidth="2.2"
               strokeLinecap="round"
               strokeLinejoin="round"
               fill="none"
@@ -104,37 +108,60 @@ export function TaskCard({ task, category, onEdit, animClass = 'animate-fade-up'
             fontSize: '0.95rem',
             fontWeight: 500,
             color: 'var(--text)',
-            textDecoration: isDone ? 'line-through' : 'none',
+            textDecoration: isDone || isSkipped ? 'line-through' : 'none',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
+            lineHeight: 1.4,
           }}
         >
           {task.title}
         </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
           <span
             style={{
-              fontSize: '0.78rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 3,
+              fontSize: '0.76rem',
               color: 'var(--text3)',
               fontFamily: 'Geist Mono, monospace',
             }}
           >
+            <Clock size={11} strokeWidth={1.5} />
             {formatTime(task.start_time)} – {formatTime(task.end_time)}
           </span>
+
           {category && (
             <span
               style={{
-                fontSize: '0.72rem',
+                fontSize: '0.71rem',
                 padding: '1px 7px',
                 borderRadius: 20,
                 background: category.color + '18',
                 color: category.color,
-                fontWeight: 500,
+                fontWeight: 600,
+                letterSpacing: '0.01em',
               }}
             >
               {category.name}
             </span>
+          )}
+
+          {/* Priority dot (faqat muhim darajalar uchun) */}
+          {task.priority >= 4 && !isDone && (
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: priorityColor,
+                flexShrink: 0,
+                display: 'inline-block',
+              }}
+              title={task.priority === 5 ? 'Juda muhim' : 'Muhim'}
+            />
           )}
         </div>
       </div>
@@ -143,20 +170,21 @@ export function TaskCard({ task, category, onEdit, animClass = 'animate-fade-up'
       <div
         style={{
           display: 'flex',
-          gap: 4,
-          opacity: showActions ? 1 : 0,
+          gap: 2,
+          opacity: showActions || isTouchDevice ? 1 : 0,
           transition: 'opacity 0.15s',
           flexShrink: 0,
+          alignSelf: 'center',
         }}
       >
         <button
-          onClick={() => onEdit(task)}
+          onClick={e => { e.stopPropagation(); onEdit(task) }}
           style={{
-            width: 28,
-            height: 28,
+            width: 30,
+            height: 30,
             borderRadius: 8,
             border: 'none',
-            background: 'transparent',
+            background: 'var(--surface2)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -170,20 +198,21 @@ export function TaskCard({ task, category, onEdit, animClass = 'animate-fade-up'
           }}
           onMouseOut={e => {
             ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text3)'
-            ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+            ;(e.currentTarget as HTMLButtonElement).style.background = 'var(--surface2)'
           }}
+          aria-label="Tahrirlash"
         >
-          <Pencil size={14} />
+          <PenLine size={13} />
         </button>
         <button
-          onClick={handleDelete}
+          onClick={e => { e.stopPropagation(); handleDelete() }}
           disabled={deleteTask.isPending}
           style={{
-            width: 28,
-            height: 28,
+            width: 30,
+            height: 30,
             borderRadius: 8,
             border: 'none',
-            background: 'transparent',
+            background: 'var(--surface2)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -197,10 +226,11 @@ export function TaskCard({ task, category, onEdit, animClass = 'animate-fade-up'
           }}
           onMouseOut={e => {
             ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text3)'
-            ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+            ;(e.currentTarget as HTMLButtonElement).style.background = 'var(--surface2)'
           }}
+          aria-label="O'chirish"
         >
-          <Trash2 size={14} />
+          <Trash2 size={13} />
         </button>
       </div>
     </div>
